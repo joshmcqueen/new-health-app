@@ -139,6 +139,13 @@ export function updateFood(db: HealthDatabase, id: number, input: NutritionField
   return update();
 }
 
+export function deleteFood(db: HealthDatabase, id: number) {
+  return db.transaction(() => {
+    db.prepare("UPDATE meal_entries SET quick_food_id = NULL, inherits_quick_food = 0 WHERE quick_food_id = ?").run(id);
+    return db.prepare("DELETE FROM quick_foods WHERE id = ?").run(id).changes > 0;
+  })();
+}
+
 export function setFoodArchived(db: HealthDatabase, id: number, archived: boolean): QuickFood | null {
   const result = db.prepare("UPDATE quick_foods SET archived_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
     .run(archived ? new Date().toISOString() : null, id);

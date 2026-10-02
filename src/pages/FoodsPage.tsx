@@ -1,4 +1,4 @@
-import { Archive, MoreHorizontal, Plus, Search, Sparkles, UtensilsCrossed } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Sparkles, Trash2, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { NutritionFields, QuickFood } from "../../shared/schemas";
 import { api } from "../api";
@@ -22,6 +22,12 @@ export function FoodsPage() {
     await load();
   }
 
+  async function remove(food: QuickFood) {
+    if (!window.confirm(`Delete “${food.name}”? Existing meal entries will be kept.`)) return;
+    await api.deleteFood(food.id);
+    await load();
+  }
+
   return (
     <div className="page">
       <header className="page-header"><div><p className="eyebrow">Reusable portions</p><h1>Foods</h1></div><button className="round-add" onClick={() => setEditing("new")}><Plus size={21} /></button></header>
@@ -29,7 +35,7 @@ export function FoodsPage() {
       <div className="search-box"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search quick foods" /></div>
       <button className="ai-banner" onClick={() => setAiOpen(true)}><span><Sparkles size={20} /></span><div><b>Create a quick food with OpenAI</b><small>Use a description, voice, photos, or nutrition labels</small></div><span className="banner-arrow">›</span></button>
 
-      {filtered.length === 0 ? <EmptyState icon={UtensilsCrossed} title={foods.length ? "No matches" : "Build your quick-food shelf"} detail={foods.length ? "Try a different search." : "Save a normal portion once, then reuse it whenever you eat it."} action={!foods.length && <button className="secondary-button" onClick={() => setAiOpen(true)}><Sparkles size={17} />Create with AI</button>} /> : <div className="food-grid">{filtered.map((food) => <article className="food-card" key={food.id}><div className="food-card-top"><div className="metric-icon food-accent"><UtensilsCrossed size={19} /></div><button className="icon-button compact" onClick={() => setEditing(food)} aria-label={`Edit ${food.name}`}><MoreHorizontal size={20} /></button></div><h2>{food.name}</h2>{food.description && <p>{food.description}</p>}<MacroRow item={food} /><AiDetails metadata={food.aiMetadata} /><div className="food-actions"><button onClick={() => setEditing(food)}>Edit</button><button className="danger-text" onClick={async () => { await api.archiveFood(food.id); await load(); }}><Archive size={15} />Archive</button></div></article>)}</div>}
+      {filtered.length === 0 ? <EmptyState icon={UtensilsCrossed} title={foods.length ? "No matches" : "Build your quick-food shelf"} detail={foods.length ? "Try a different search." : "Save a normal portion once, then reuse it whenever you eat it."} action={!foods.length && <button className="secondary-button" onClick={() => setAiOpen(true)}><Sparkles size={17} />Create with AI</button>} /> : <div className="food-grid">{filtered.map((food) => <article className="food-card" key={food.id}><div className="food-card-top"><div className="metric-icon food-accent"><UtensilsCrossed size={19} /></div><button className="icon-button compact" onClick={() => setEditing(food)} aria-label={`Edit ${food.name}`}><MoreHorizontal size={20} /></button></div><h2>{food.name}</h2>{food.description && <p>{food.description}</p>}<MacroRow item={food} /><AiDetails metadata={food.aiMetadata} /><div className="food-actions"><button onClick={() => setEditing(food)}>Edit</button><button className="danger-text" onClick={() => void remove(food)}><Trash2 size={15} />Delete</button></div></article>)}</div>}
 
       {aiOpen && <AiCapture mode="quick_food" onClose={() => setAiOpen(false)} onSaved={() => void load()} />}
       {editing && <NutritionModal title={editing === "new" ? "Add quick food" : "Edit quick food"} initial={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} onSave={save} />}

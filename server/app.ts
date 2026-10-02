@@ -15,6 +15,7 @@ import { createDatabase, type HealthDatabase } from "./db/database.js";
 import {
   createFood,
   createMeal,
+  deleteFood,
   deleteMeal,
   deleteWeight,
   getAnalytics,
@@ -81,6 +82,10 @@ export async function buildApp(options: AppOptions = {}) {
   app.patch("/api/foods/:id", async (request, reply) => {
     const food = updateFood(db, idSchema.parse((request.params as { id: string }).id), nutritionFieldsSchema.parse(request.body));
     return food ? food : reply.status(404).send({ error: "Food not found" });
+  });
+  app.delete("/api/foods/:id", async (request, reply) => {
+    if (!deleteFood(db, idSchema.parse((request.params as { id: string }).id))) return reply.status(404).send({ error: "Food not found" });
+    return reply.status(204).send();
   });
   app.post("/api/foods/:id/archive", async (request, reply) => {
     const body = z.object({ archived: z.boolean() }).parse(request.body);

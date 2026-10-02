@@ -24,4 +24,14 @@ describe("health API", () => {
     const response = await app.inject({ method: "GET", url: "/api/health" });
     expect(response.json()).toEqual({ ok: true, openAiConfigured: false });
   });
+
+  it("deletes a quick food", async () => {
+    db = createDatabase(":memory:");
+    app = await buildApp({ database: db, aiService: null });
+    const created = await app.inject({ method: "POST", url: "/api/foods", payload: { name: "Toast", description: "", calories: 120, proteinGrams: 4, carbsGrams: 22, fatGrams: 2 } });
+
+    const deleted = await app.inject({ method: "DELETE", url: `/api/foods/${created.json().id}` });
+    expect(deleted.statusCode).toBe(204);
+    expect((await app.inject({ method: "GET", url: "/api/foods" })).json()).toEqual([]);
+  });
 });

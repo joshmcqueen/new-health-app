@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { HealthDatabase } from "./database.js";
 import { createDatabase, runMigrations } from "./database.js";
-import { createFood, createMeal, getAnalytics, listMeals, listWeights, logQuickFood, updateFood, updateMeal, upsertWeight } from "./repositories.js";
+import { createFood, createMeal, deleteFood, getAnalytics, getFood, listMeals, listWeights, logQuickFood, updateFood, updateMeal, upsertWeight } from "./repositories.js";
 
 let db: HealthDatabase | undefined;
 afterEach(() => db?.close());
@@ -28,6 +28,16 @@ describe("SQLite repositories", () => {
     const meals = listMeals(db, "2026-10-01", "2026-10-02");
     expect(meals.find((meal) => meal.id === inherited.id)?.calories).toBe(430);
     expect(meals.find((meal) => meal.id === overridden.id)?.calories).toBe(450);
+  });
+
+  it("deletes a quick food without deleting its meal history", () => {
+    db = createDatabase(":memory:");
+    const food = createFood(db, yogurt);
+    const meal = logQuickFood(db, food.id, "2026-10-01", "2026-10-01T08:00:00", "breakfast")!;
+
+    expect(deleteFood(db, food.id)).toBe(true);
+    expect(getFood(db, food.id)).toBeNull();
+    expect(listMeals(db, "2026-10-01", "2026-10-01")).toMatchObject([{ id: meal.id, quickFoodId: null, inheritsQuickFood: false }]);
   });
 
   it("returns zero-filled daily analytics and weight gaps", () => {

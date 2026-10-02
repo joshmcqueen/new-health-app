@@ -26,7 +26,7 @@ export const api = {
   getFoods: () => request<QuickFood[]>("/api/foods"),
   createFood: (value: NutritionFields) => request<QuickFood>("/api/foods", json("POST", value)),
   updateFood: (id: number, value: NutritionFields) => request<QuickFood>(`/api/foods/${id}`, json("PATCH", value)),
-  archiveFood: (id: number) => request<QuickFood>(`/api/foods/${id}/archive`, json("POST", { archived: true })),
+  deleteFood: (id: number) => request<void>(`/api/foods/${id}`, { method: "DELETE" }),
   getMeals: (start: string, end = start) => request<MealEntry[]>(`/api/meals?start=${start}&end=${end}`),
   createMeal: (value: MealInput) => request<MealEntry>("/api/meals", json("POST", value)),
   logFood: (value: { quickFoodId: number; date: string; loggedAt: string; mealType: string }) =>
