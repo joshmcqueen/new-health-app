@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
-  calorie_goal REAL,
-  protein_goal REAL,
-  carbs_goal REAL,
-  fat_goal REAL,
+  goal_weight REAL DEFAULT 160 CHECK (goal_weight IS NULL OR goal_weight > 0),
+  calorie_goal REAL DEFAULT 2000,
+  protein_goal REAL DEFAULT 160,
+  carbs_goal REAL DEFAULT 200,
+  fat_goal REAL DEFAULT 65,
   timezone TEXT NOT NULL DEFAULT 'America/Los_Angeles',
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
