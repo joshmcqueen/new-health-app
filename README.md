@@ -14,7 +14,7 @@ pnpm dev
 
 Open `http://localhost:5173`. The SQLite database is created automatically at `data/health.db`.
 
-The Settings screen contains weight and nutrition goals plus development-only data controls. A new database starts with goals of 160 lb, 2,000 calories, 160g protein, 200g carbs, and 65g fat, but no tracked entries. Use **Seed one week of data** to explicitly add a sample week ending today, or **Clear all data** to return the local database to a clean state and restore those goal defaults.
+The Settings screen contains weight and nutrition goals plus development-only data controls. A new database starts with goals of 160 lb, 2,000 calories, 160g protein, 200g carbs, and 65g fat, but no tracked entries. Use **Seed one week of data** to explicitly add a sample week ending today, or **Clear all data** to rebuild the local schema, remove all tracker data, and restore those goal defaults.
 
 To enable AI features, add an OpenAI API key to `.env`. The nutrition and transcription models can be changed independently:
 

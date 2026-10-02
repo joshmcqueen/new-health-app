@@ -1,4 +1,4 @@
-import type { HealthDatabase } from "./database.js";
+import { runMigrations, type HealthDatabase } from "./database.js";
 import type {
   AiMetadata,
   DailyAnalytics,
@@ -11,8 +11,6 @@ import type {
   WeightEntry,
   WeightInput,
 } from "../../shared/schemas.js";
-import { DEFAULT_SETTINGS } from "../../shared/schemas.js";
-
 type Row = Record<string, unknown>;
 
 function parseMetadata(value: unknown): AiMetadata | null {
@@ -87,13 +85,22 @@ export function updateSettings(db: HealthDatabase, settings: Settings): Settings
 }
 
 export function clearAllData(db: HealthDatabase): Settings {
-  return db.transaction(() => {
-    db.prepare("DELETE FROM meal_entries").run();
-    db.prepare("DELETE FROM quick_foods").run();
-    db.prepare("DELETE FROM weight_entries").run();
-    db.prepare("DELETE FROM sqlite_sequence WHERE name IN ('meal_entries', 'quick_foods', 'weight_entries')").run();
-    return updateSettings(db, DEFAULT_SETTINGS);
-  })();
+  db.pragma("foreign_keys = OFF");
+  try {
+    return db.transaction(() => {
+      db.exec(`
+        DROP TABLE IF EXISTS meal_entries;
+        DROP TABLE IF EXISTS quick_foods;
+        DROP TABLE IF EXISTS weight_entries;
+        DROP TABLE IF EXISTS settings;
+        DELETE FROM schema_migrations;
+      `);
+      runMigrations(db);
+      return getSettings(db);
+    })();
+  } finally {
+    db.pragma("foreign_keys = ON");
+  }
 }
 
 const sampleFoods: NutritionFields[] = [

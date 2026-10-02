@@ -90,7 +90,7 @@ export function SettingsPage() {
 
       <section className="settings-card danger-zone">
         <div className="settings-card-heading"><span className="metric-icon danger-icon"><Trash2 size={20} /></span><div><p className="eyebrow">Danger zone</p><h2>Start fresh</h2></div></div>
-        <p className="settings-copy">Permanently remove every weight, meal, and saved food, then restore the default goals.</p>
+        <p className="settings-copy">Permanently remove every weight, meal, and saved food, rebuild the local schema, then restore the default goals.</p>
         <button className="danger-button" type="button" onClick={() => setClearOpen(true)}><RotateCcw size={18} />Clear all data</button>
       </section>
 

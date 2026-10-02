@@ -70,4 +70,24 @@ describe("SQLite repositories", () => {
     expect(listFoods(db)).toEqual([]);
     expect(getSettings(db)).toMatchObject({ goalWeight: 160, calorieGoal: 2000, proteinGoal: 160, carbsGoal: 200, fatGoal: 65 });
   });
+
+  it("rebuilds a stale development schema when clearing data", () => {
+    db = createDatabase(":memory:");
+    db.exec(`
+      DROP TABLE settings;
+      CREATE TABLE settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        calorie_goal REAL,
+        protein_goal REAL,
+        carbs_goal REAL,
+        fat_goal REAL,
+        timezone TEXT NOT NULL DEFAULT 'America/Los_Angeles',
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO settings (id) VALUES (1);
+    `);
+
+    expect(clearAllData(db)).toMatchObject({ goalWeight: 160, calorieGoal: 2000, proteinGoal: 160, carbsGoal: 200, fatGoal: 65 });
+    expect(db.prepare("SELECT goal_weight FROM settings WHERE id = 1").get()).toEqual({ goal_weight: 160 });
+  });
 });
