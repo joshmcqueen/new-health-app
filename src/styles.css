@@ -83,12 +83,19 @@ h1, h2, h3, p { margin-top: 0; }
 .meal-list { display: grid; gap: 10px; }
 .meal-card { position: relative; display: flex; gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
 .meal-icon { flex: 0 0 37px; height: 37px; display: grid; place-items: center; color: #8f6200; font-weight: 800; background: #fff3d6; border-radius: 12px; }
-.meal-info { flex: 1; min-width: 0; }
+.meal-info { flex: 1; min-width: 0; container-type: inline-size; }
 .meal-info > small { color: var(--muted); text-transform: capitalize; font-size: .7rem; font-weight: 700; }
 .meal-info h3 { margin: 2px 50px 3px 0; font-size: 1rem; }
 .meal-info > p { margin: 0 0 9px; color: var(--muted); font-size: .8rem; line-height: 1.35; }
-.macro-row { display: flex; flex-wrap: wrap; gap: 5px 11px; color: var(--muted); font-size: .72rem; }
-.macro-row b { color: var(--ink); }
+.macro-row { display: grid; grid-template-columns: 1.25fr repeat(3, 1fr); margin-top: 12px; padding: 11px 0; border-radius: 13px; background: var(--soft); }
+.macro-row span { min-width: 0; padding: 0 8px; border-left: 1px solid #dfe2e8; }
+.macro-row span:first-child { border-left: 0; }
+.macro-row b { display: block; color: var(--ink); font-size: .82rem; line-height: 1; white-space: nowrap; }
+.macro-row small { display: block; margin-top: 5px; color: var(--muted); font-size: .58rem; font-weight: 650; white-space: nowrap; }
+@container (max-width: 260px) {
+  .macro-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
+  .macro-row span:nth-child(3) { border-left: 0; }
+}
 .row-actions { position: absolute; right: 9px; top: 10px; display: flex; }
 .row-actions button { width: 30px; height: 30px; border: 0; border-radius: 9px; display: grid; place-items: center; background: transparent; color: #8c929d; }
 

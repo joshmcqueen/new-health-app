@@ -3,7 +3,17 @@ import type { AiMetadata, MealEntry, QuickFood, Settings } from "../../shared/sc
 import { rounded } from "../utils";
 
 export function MacroRow({ item }: { item: Pick<QuickFood, "calories" | "proteinGrams" | "carbsGrams" | "fatGrams"> }) {
-  return <div className="macro-row"><span><b>{rounded(item.calories)}</b> cal</span><span><b>{rounded(item.proteinGrams)}</b>g P</span><span><b>{rounded(item.carbsGrams)}</b>g C</span><span><b>{rounded(item.fatGrams)}</b>g F</span></div>;
+  return (
+    <div
+      className="macro-row"
+      aria-label={`${rounded(item.calories)} calories, ${rounded(item.proteinGrams)} grams protein, ${rounded(item.carbsGrams)} grams carbohydrates, ${rounded(item.fatGrams)} grams fat`}
+    >
+      <span><b>{rounded(item.calories)} cal</b><small>Calories</small></span>
+      <span><b>{rounded(item.proteinGrams)}g</b><small>Protein</small></span>
+      <span><b>{rounded(item.carbsGrams)}g</b><small>Carbs</small></span>
+      <span><b>{rounded(item.fatGrams)}g</b><small>Fat</small></span>
+    </div>
+  );
 }
 
 export function AiDetails({ metadata }: { metadata: AiMetadata | null }) {
