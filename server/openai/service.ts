@@ -1,12 +1,11 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import OpenAI, { toFile } from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { nutritionEstimateSchema, type AiMetadata, type NutritionEstimate } from "../../shared/schemas.js";
 
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const projectRoot = process.cwd();
 
 export interface NutritionAnalysis {
   estimate: NutritionEstimate;

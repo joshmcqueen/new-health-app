@@ -4,7 +4,7 @@ A private, mobile-first health and meal tracker built for an iPhone on a local n
 
 ## Run locally
 
-Requirements: Node.js 22+ and pnpm.
+Requirements: Node.js 22+ and pnpm 11.
 
 ```bash
 cp .env.example .env
@@ -41,7 +41,47 @@ Then visit the displayed `https://<mac-hostname>.local:5173` address from the sa
 - `pnpm dev` — run the API and Vite development server.
 - `pnpm typecheck` — check client and server TypeScript.
 - `pnpm test` — run repository and API tests.
-- `pnpm build` — create the production web bundle.
-- `pnpm start` — run the Fastify server, which serves `dist/` when present.
+- `pnpm build` — type-check and create the production web and server bundles.
+- `pnpm start` — run the compiled Fastify server, which serves `dist/`.
+
+## Docker
+
+Build and run the production container locally:
+
+```bash
+docker build -t health-tracker .
+docker run --rm \
+  -p 3000:3000 \
+  -v health-tracker-data:/app/data \
+  -e OPENAI_API_KEY=your-key \
+  health-tracker
+```
+
+Open `http://localhost:3000`. The image serves the React app and API from the same Fastify process, runs as a non-root user, and reports container health through `/api/health`.
+
+The `/app/data` volume is required for durable SQLite data. Photos and recordings are still held only for the duration of each request and are not written to that volume.
+
+## Dokploy and Cloudflare Access
+
+Create a Dokploy application from this repository and select the included `Dockerfile` as the build type. Configure:
+
+```text
+Container port: 3000
+Health check path: /api/health
+Persistent volume mount: /app/data
+
+Environment:
+  PORT=3000
+  HOST=0.0.0.0
+  DATABASE_PATH=/app/data/health.db
+  OPENAI_API_KEY=<your key>
+  OPENAI_NUTRITION_MODEL=gpt-6.1-sol
+  OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
+  OPENAI_IMAGE_DETAIL=high
+```
+
+Attach the app's hostname in Dokploy, keep that DNS record proxied through Cloudflare, and put the hostname behind the existing Cloudflare Zero Trust Access application. Cloudflare supplies the public HTTPS connection needed for iPhone microphone access; the container itself should remain HTTP on port 3000 behind Dokploy's reverse proxy. No Cloudflare credentials belong in this container.
+
+Because the app has no built-in authentication, do not expose its origin or port 3000 directly to the public internet. Confirm that requests which bypass Cloudflare are blocked by your tunnel, firewall, or origin rules before entering personal data.
 
 The app intentionally has no authentication. Anyone who can reach it on the network can view and modify its data.

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": false,
+    "outDir": "build",
+    "rootDir": ".",
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.server.tsbuildinfo"
+  },
+  "include": ["server/**/*.ts", "shared/**/*.ts"],
+  "exclude": ["server/**/*.test.ts"]
+}

@@ -14,6 +14,7 @@
 - Zod contracts shared by client and server, React Hook Form for forms, Recharts for charts, and native fetch/hooks for server state.
 - Plain CSS, native HTML controls, browser image normalization, and Lucide icons keep the UI layer small.
 - SQLite, environment files, uploaded photos, and recorded audio remain outside Git. Photos and audio are discarded after each AI request.
+- Production uses a multi-stage Docker image with a non-root runtime, a persistent SQLite volume, and a health check suitable for Dokploy behind Cloudflare Access.
 
 ## OpenAI
 
@@ -29,4 +30,4 @@
 3. Reusable photo/text/voice AI capture.
 4. Charts, iPhone HTTPS testing, accessibility, and production build verification.
 
-Deferred: authentication, offline mode, export/backup UI, external nutrition databases, Docker, and Dokku deployment.
+Deferred: authentication, offline mode, export/backup UI, and external nutrition databases.

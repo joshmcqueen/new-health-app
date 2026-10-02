@@ -1,10 +1,8 @@
 import Database from "better-sqlite3";
 import { mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const moduleDir = dirname(fileURLToPath(import.meta.url));
-const migrationsDir = resolve(moduleDir, "migrations");
+const migrationsDir = resolve(process.cwd(), "server", "db", "migrations");
 
 export type HealthDatabase = Database.Database;
 
