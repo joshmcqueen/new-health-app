@@ -11,6 +11,7 @@ import type {
   WeightEntry,
   WeightInput,
 } from "../../shared/schemas.js";
+import { DEFAULT_SETTINGS } from "../../shared/schemas.js";
 
 type Row = Record<string, unknown>;
 
@@ -68,6 +69,7 @@ function mapMeal(row: Row): MealEntry {
 export function getSettings(db: HealthDatabase): Settings {
   const row = db.prepare("SELECT * FROM settings WHERE id = 1").get() as Row;
   return {
+    goalWeight: row.goal_weight === null ? null : Number(row.goal_weight),
     calorieGoal: row.calorie_goal === null ? null : Number(row.calorie_goal),
     proteinGoal: row.protein_goal === null ? null : Number(row.protein_goal),
     carbsGoal: row.carbs_goal === null ? null : Number(row.carbs_goal),
@@ -78,10 +80,81 @@ export function getSettings(db: HealthDatabase): Settings {
 
 export function updateSettings(db: HealthDatabase, settings: Settings): Settings {
   db.prepare(`
-    UPDATE settings SET calorie_goal = ?, protein_goal = ?, carbs_goal = ?, fat_goal = ?, timezone = ?, updated_at = CURRENT_TIMESTAMP
+    UPDATE settings SET goal_weight = ?, calorie_goal = ?, protein_goal = ?, carbs_goal = ?, fat_goal = ?, timezone = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = 1
-  `).run(settings.calorieGoal, settings.proteinGoal, settings.carbsGoal, settings.fatGoal, settings.timezone);
+  `).run(settings.goalWeight, settings.calorieGoal, settings.proteinGoal, settings.carbsGoal, settings.fatGoal, settings.timezone);
   return getSettings(db);
+}
+
+export function clearAllData(db: HealthDatabase): Settings {
+  return db.transaction(() => {
+    db.prepare("DELETE FROM meal_entries").run();
+    db.prepare("DELETE FROM quick_foods").run();
+    db.prepare("DELETE FROM weight_entries").run();
+    db.prepare("DELETE FROM sqlite_sequence WHERE name IN ('meal_entries', 'quick_foods', 'weight_entries')").run();
+    return updateSettings(db, DEFAULT_SETTINGS);
+  })();
+}
+
+const sampleFoods: NutritionFields[] = [
+  { name: "Greek yogurt & berries", description: "Plain Greek yogurt, blueberries, strawberries, and chia seeds", calories: 310, proteinGrams: 28, carbsGrams: 35, fatGrams: 7 },
+  { name: "Apple & almond butter", description: "One crisp apple with almond butter", calories: 245, proteinGrams: 6, carbsGrams: 32, fatGrams: 12 },
+  { name: "Protein smoothie", description: "Protein powder, banana, spinach, and unsweetened almond milk", calories: 330, proteinGrams: 34, carbsGrams: 39, fatGrams: 6 },
+  { name: "Hummus & vegetables", description: "Hummus with carrots, cucumber, and bell pepper", calories: 220, proteinGrams: 7, carbsGrams: 28, fatGrams: 10 },
+];
+
+const sampleMeals: Record<MealType, NutritionFields[]> = {
+  breakfast: [
+    sampleFoods[0],
+    { name: "Veggie egg scramble", description: "Eggs, egg whites, spinach, peppers, avocado, and whole-grain toast", calories: 430, proteinGrams: 34, carbsGrams: 36, fatGrams: 18 },
+    { name: "Protein oatmeal", description: "Oats, protein powder, banana, walnuts, and cinnamon", calories: 455, proteinGrams: 32, carbsGrams: 58, fatGrams: 12 },
+  ],
+  lunch: [
+    { name: "Grilled chicken grain bowl", description: "Chicken, quinoa, greens, cucumber, tomato, and lemon tahini", calories: 575, proteinGrams: 48, carbsGrams: 56, fatGrams: 19 },
+    { name: "Turkey avocado wrap", description: "Turkey, avocado, greens, tomato, and mustard in a whole-grain wrap", calories: 510, proteinGrams: 42, carbsGrams: 49, fatGrams: 17 },
+    { name: "Salmon power salad", description: "Roasted salmon, mixed greens, chickpeas, vegetables, and vinaigrette", calories: 540, proteinGrams: 41, carbsGrams: 38, fatGrams: 25 },
+  ],
+  dinner: [
+    { name: "Salmon, sweet potato & broccoli", description: "Roasted salmon with sweet potato and broccoli", calories: 610, proteinGrams: 47, carbsGrams: 59, fatGrams: 22 },
+    { name: "Chicken vegetable stir-fry", description: "Chicken breast and vegetables with brown rice and ginger sauce", calories: 625, proteinGrams: 52, carbsGrams: 70, fatGrams: 16 },
+    { name: "Turkey meatballs & pasta", description: "Turkey meatballs, whole-wheat pasta, tomato sauce, and a side salad", calories: 650, proteinGrams: 49, carbsGrams: 73, fatGrams: 19 },
+  ],
+  snack: [sampleFoods[1], sampleFoods[2], sampleFoods[3]],
+};
+
+function sampleDates(today: string) {
+  const cursor = new Date(`${today}T12:00:00Z`);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(cursor);
+    date.setUTCDate(date.getUTCDate() - (6 - index));
+    return date.toISOString().slice(0, 10);
+  });
+}
+
+export function seedSampleData(db: HealthDatabase, today: string) {
+  const hasData = (["weight_entries", "meal_entries", "quick_foods"] as const)
+    .some((table) => Number((db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as Row).count) > 0);
+  if (hasData) return null;
+
+  return db.transaction(() => {
+    sampleFoods.forEach((food) => createFood(db, food));
+    const dates = sampleDates(today);
+    dates.forEach((date, index) => {
+      upsertWeight(db, { date, pounds: Number((164.8 - index * 0.18 + (index % 2 ? 0.1 : 0)).toFixed(1)), note: "Sample data" });
+      const schedule: Array<[MealType, string]> = [
+        ["breakfast", "08:00:00"],
+        ["lunch", "12:30:00"],
+        ["snack", "15:30:00"],
+        ["dinner", "19:00:00"],
+      ];
+      schedule.forEach(([mealType, time], mealIndex) => {
+        const choices = sampleMeals[mealType];
+        const nutrition = choices[(index + mealIndex) % choices.length];
+        createMeal(db, { ...nutrition, date, loggedAt: `${date}T${time}`, mealType, quickFoodId: null });
+      });
+    });
+    return { days: dates.length, meals: dates.length * 4, weights: dates.length, foods: sampleFoods.length };
+  })();
 }
 
 export function listWeights(db: HealthDatabase, start?: string, end?: string): WeightEntry[] {

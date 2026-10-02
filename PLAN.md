@@ -3,7 +3,7 @@
 ## Product
 
 - Mobile-first Safari experience for one user on an internal network.
-- Today dashboard, pounds-based weight history, reusable quick foods, daily meal log, current goals, and trend charts.
+- Today dashboard, pounds-based weight history, reusable quick foods, daily meal log, dedicated goal/settings screen, and trend charts with current goal references.
 - Automatic OpenAI estimates from text, voice, direct-camera photos, camera-roll photos, and multiple nutrition labels.
 - Apple Health-like visual language with an original layout: bright surfaces, compact cards, colorful metrics, and consistent `lucide-react` icons.
 
@@ -13,6 +13,7 @@
 - Raw `better-sqlite3`, prepared statements, numbered SQL migrations, and focused repository functions; no ORM.
 - Zod contracts shared by client and server, React Hook Form for forms, Recharts for charts, and native fetch/hooks for server state.
 - Plain CSS, native HTML controls, browser image normalization, and Lucide icons keep the UI layer small.
+- Explicit development controls can seed a realistic seven-day sample or transactionally clear local tracker data; sample entries are never created automatically.
 - SQLite, environment files, uploaded photos, and recorded audio remain outside Git. Photos and audio are discarded after each AI request.
 - Production uses a multi-stage Docker image with a non-root runtime, a persistent SQLite volume, and a health check suitable for Dokploy behind Cloudflare Access.
 

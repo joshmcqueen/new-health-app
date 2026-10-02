@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, CalendarDays, Home, Utensils } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, Home, Settings, Utensils } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 
@@ -6,12 +6,14 @@ const TodayPage = lazy(() => import("./pages/TodayPage").then((module) => ({ def
 const LogPage = lazy(() => import("./pages/LogPage").then((module) => ({ default: module.LogPage })));
 const FoodsPage = lazy(() => import("./pages/FoodsPage").then((module) => ({ default: module.FoodsPage })));
 const ChartsPage = lazy(() => import("./pages/ChartsPage").then((module) => ({ default: module.ChartsPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage").then((module) => ({ default: module.SettingsPage })));
 
 const tabs = [
   { to: "/today", label: "Today", icon: Home },
   { to: "/log", label: "Log", icon: CalendarDays },
   { to: "/foods", label: "Foods", icon: Utensils },
   { to: "/charts", label: "Charts", icon: BarChart3 },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function App() {
@@ -24,6 +26,7 @@ export function App() {
             <Route path="/log" element={<LogPage />} />
             <Route path="/foods" element={<FoodsPage />} />
             <Route path="/charts" element={<ChartsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Routes>
         </Suspense>

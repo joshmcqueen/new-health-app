@@ -7,12 +7,22 @@ export const confidenceSchema = z.enum(["low", "medium", "high"]);
 const nullableGoal = z.number().nonnegative().nullable();
 
 export const settingsSchema = z.object({
+  goalWeight: z.number().positive().max(1500).nullable(),
   calorieGoal: nullableGoal,
   proteinGoal: nullableGoal,
   carbsGoal: nullableGoal,
   fatGoal: nullableGoal,
   timezone: z.string().min(1),
 });
+
+export const DEFAULT_SETTINGS = {
+  goalWeight: 160,
+  calorieGoal: 2000,
+  proteinGoal: 160,
+  carbsGoal: 200,
+  fatGoal: 65,
+  timezone: "America/Los_Angeles",
+} satisfies z.infer<typeof settingsSchema>;
 
 export const weightInputSchema = z.object({
   date: isoDateSchema,

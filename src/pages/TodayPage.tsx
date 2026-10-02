@@ -1,26 +1,26 @@
 import { Activity, ArrowDownRight, CalendarPlus, ChevronRight, CircleGauge, Pencil, Plus, Scale, Settings as SettingsIcon, Sparkles, Trash2, Utensils } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { MealEntry, Settings, WeightEntry, WeightInput } from "../../shared/schemas";
+import { DEFAULT_SETTINGS } from "../../shared/schemas";
 import { api } from "../api";
 import { AiCapture } from "../components/AiCapture";
 import { EmptyState } from "../components/EmptyState";
-import { SettingsModal, WeightModal } from "../components/Forms";
+import { WeightModal } from "../components/Forms";
 import { Modal } from "../components/Modal";
-import { AiDetails, MacroRow, ProgressMetric, goalsConfigured, mealTotals } from "../components/Nutrition";
+import { AiDetails, MacroRow, ProgressMetric, mealTotals } from "../components/Nutrition";
 import { dateLabel, localDate } from "../utils";
 
-const emptySettings: Settings = { calorieGoal: null, proteinGoal: null, carbsGoal: null, fatGoal: null, timezone: "America/Los_Angeles" };
-
 export function TodayPage() {
+  const navigate = useNavigate();
   const today = localDate();
-  const [settings, setSettings] = useState<Settings>(emptySettings);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
   const [meals, setMeals] = useState<MealEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [weightOpen, setWeightOpen] = useState(false);
   const [weightHistoryOpen, setWeightHistoryOpen] = useState(false);
   const [weightEditing, setWeightEditing] = useState<WeightInput | undefined>();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -39,14 +39,14 @@ export function TodayPage() {
     <div className="page today-page">
       <header className="page-header">
         <div><p className="eyebrow">{dateLabel(today)}</p><h1>Today</h1></div>
-        <button className="icon-button surface" onClick={() => setSettingsOpen(true)} aria-label="Settings"><SettingsIcon size={20} /></button>
+        <button className="icon-button surface" onClick={() => navigate("/settings")} aria-label="Settings"><SettingsIcon size={20} /></button>
       </header>
 
-      {!loading && !latestWeight && meals.length === 0 && !goalsConfigured(settings) && <section className="welcome-card"><span><Activity size={24} /></span><div><p className="eyebrow">Your private health journal</p><h2>Start with today.</h2><p>Set a goal, record your weight, or log your first meal. This space will fill in as you go.</p></div><div className="welcome-actions"><button onClick={() => { setWeightEditing(undefined); setWeightOpen(true); }}><Scale size={18} />Log weight</button><button onClick={() => setSettingsOpen(true)}><CircleGauge size={18} />Set goals</button></div></section>}
+      {!loading && !latestWeight && meals.length === 0 && <section className="welcome-card"><span><Activity size={24} /></span><div><p className="eyebrow">Your private health journal</p><h2>Start with today.</h2><p>Record your weight, log a meal, or open Settings to add a sample week.</p></div><div className="welcome-actions"><button onClick={() => { setWeightEditing(undefined); setWeightOpen(true); }}><Scale size={18} />Log weight</button><button onClick={() => navigate("/settings")}><CircleGauge size={18} />Settings</button></div></section>}
 
       <section className="weight-card card-button" onClick={() => setWeightHistoryOpen(true)}>
         <div className="metric-icon blue"><Scale size={22} /></div>
-        <div className="weight-content"><p>Weight</p>{latestWeight ? <><strong>{latestWeight.pounds.toFixed(1)} <small>lb</small></strong>{delta !== null && <span className={delta <= 0 ? "positive" : "muted"}><ArrowDownRight size={15} />{Math.abs(delta).toFixed(1)} lb since last entry</span>}</> : <><strong className="empty-value">—</strong><span>Tap to add today’s weight</span></>}</div>
+        <div className="weight-content"><p>Weight</p>{latestWeight ? <><strong>{latestWeight.pounds.toFixed(1)} <small>lb</small></strong>{delta !== null && <span className={delta <= 0 ? "positive" : "muted"}><ArrowDownRight size={15} />{Math.abs(delta).toFixed(1)} lb since last entry</span>}{settings.goalWeight !== null && <span>Goal {settings.goalWeight.toFixed(1)} lb</span>}</> : <><strong className="empty-value">—</strong><span>{settings.goalWeight !== null ? `Goal ${settings.goalWeight.toFixed(1)} lb · tap to add` : "Tap to add today’s weight"}</span></>}</div>
         <ChevronRight size={20} className="chevron" />
       </section>
 
@@ -66,7 +66,6 @@ export function TodayPage() {
 
       {weightHistoryOpen && <Modal title="Weight history" eyebrow="One entry per day" onClose={() => setWeightHistoryOpen(false)}><div className="history-header"><p>Track the trend without overthinking each point.</p><button className="secondary-button" onClick={() => { setWeightEditing(undefined); setWeightOpen(true); }}><Plus size={16} />Add</button></div>{weights.length === 0 ? <EmptyState icon={Scale} title="No weights yet" detail="Add today’s weight or choose an earlier date." /> : <div className="weight-history">{weights.map((weight) => <div key={weight.id}><button className="weight-history-main" onClick={() => { setWeightEditing(weight); setWeightOpen(true); }}><span><b>{weight.pounds.toFixed(1)} lb</b><small>{dateLabel(weight.date, { month: "long", day: "numeric", year: "numeric" })}</small></span><Pencil size={16} /></button><button className="history-delete" onClick={async () => { await api.deleteWeight(weight.id); await load(); }} aria-label={`Delete weight from ${weight.date}`}><Trash2 size={16} /></button></div>)}</div>}</Modal>}
       {weightOpen && <WeightModal initial={weightEditing} onClose={() => setWeightOpen(false)} onSaved={() => { setWeightOpen(false); void load(); }} />}
-      {settingsOpen && <SettingsModal settings={settings} onClose={() => setSettingsOpen(false)} onSaved={setSettings} />}
       {aiOpen && <AiCapture mode="meal_log" date={today} onClose={() => setAiOpen(false)} onSaved={() => void load()} />}
     </div>
   );

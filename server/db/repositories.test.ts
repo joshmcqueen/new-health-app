@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { HealthDatabase } from "./database.js";
 import { createDatabase, runMigrations } from "./database.js";
-import { createFood, createMeal, deleteFood, getAnalytics, getFood, listMeals, listWeights, logQuickFood, updateFood, updateMeal, upsertWeight } from "./repositories.js";
+import { clearAllData, createFood, createMeal, deleteFood, getAnalytics, getFood, getSettings, listFoods, listMeals, listWeights, logQuickFood, seedSampleData, updateFood, updateMeal, upsertWeight } from "./repositories.js";
 
 let db: HealthDatabase | undefined;
 afterEach(() => db?.close());
@@ -49,5 +49,25 @@ describe("SQLite repositories", () => {
     expect(analytics[0]).toMatchObject({ weight: 185, calories: 0 });
     expect(analytics[1]).toMatchObject({ weight: null, calories: 410, proteinGrams: 28 });
     expect(analytics[2]).toMatchObject({ weight: null, calories: 0 });
+  });
+
+  it("seeds the seven days ending today only when empty", () => {
+    db = createDatabase(":memory:");
+    expect(seedSampleData(db, "2026-10-01")).toEqual({ days: 7, meals: 28, weights: 7, foods: 4 });
+    expect(listWeights(db)).toHaveLength(7);
+    expect(listWeights(db).at(-1)?.date).toBe("2026-09-25");
+    expect(listMeals(db, "2026-09-25", "2026-10-01")).toHaveLength(28);
+    expect(listFoods(db)).toHaveLength(4);
+    expect(seedSampleData(db, "2026-10-01")).toBeNull();
+  });
+
+  it("clears tracker data and restores default goals", () => {
+    db = createDatabase(":memory:");
+    seedSampleData(db, "2026-10-01");
+    clearAllData(db);
+    expect(listWeights(db)).toEqual([]);
+    expect(listMeals(db, "2026-09-25", "2026-10-01")).toEqual([]);
+    expect(listFoods(db)).toEqual([]);
+    expect(getSettings(db)).toMatchObject({ goalWeight: 160, calorieGoal: 2000, proteinGoal: 160, carbsGoal: 200, fatGoal: 65 });
   });
 });

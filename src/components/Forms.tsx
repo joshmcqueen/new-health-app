@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import type { NutritionFields, Settings, WeightInput } from "../../shared/schemas";
-import { nutritionFieldsSchema, settingsSchema, weightInputSchema } from "../../shared/schemas";
+import type { NutritionFields, WeightInput } from "../../shared/schemas";
+import { nutritionFieldsSchema, weightInputSchema } from "../../shared/schemas";
 import { api } from "../api";
 import { localDate } from "../utils";
 import { Modal } from "./Modal";
@@ -42,26 +42,6 @@ export function NutritionModal({ initial, title, onClose, onSave }: { initial?: 
           <label><span>Fat</span><div className="input-suffix"><input type="number" step="0.1" inputMode="decimal" {...register("fatGrams", numberValue)} /><b>g</b></div></label>
         </div>
         <button className="primary-button" disabled={isSubmitting}>{isSubmitting ? "Saving…" : "Save"}</button>
-      </form>
-    </Modal>
-  );
-}
-
-export function SettingsModal({ settings, onClose, onSaved }: { settings: Settings; onClose: () => void; onSaved: (value: Settings) => void }) {
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<Settings>({ resolver: zodResolver(settingsSchema), defaultValues: settings });
-  const nullableNumber = { setValueAs: (value: string) => value === "" ? null : Number(value) };
-  return (
-    <Modal title="Daily goals" eyebrow="Settings" onClose={onClose}>
-      <form className="form-stack" onSubmit={handleSubmit(async (value) => { const saved = await api.updateSettings(value); onSaved(saved); onClose(); })}>
-        <p className="form-intro">Leave any goal empty to hide it from your dashboard and charts.</p>
-        <div className="macro-form-grid">
-          <label><span>Calories</span><input type="number" placeholder="2000" {...register("calorieGoal", nullableNumber)} /></label>
-          <label><span>Protein</span><div className="input-suffix"><input type="number" placeholder="160" {...register("proteinGoal", nullableNumber)} /><b>g</b></div></label>
-          <label><span>Carbs</span><div className="input-suffix"><input type="number" {...register("carbsGoal", nullableNumber)} /><b>g</b></div></label>
-          <label><span>Fat</span><div className="input-suffix"><input type="number" {...register("fatGoal", nullableNumber)} /><b>g</b></div></label>
-        </div>
-        <input type="hidden" {...register("timezone")} />
-        <button className="primary-button" disabled={isSubmitting}>{isSubmitting ? "Saving…" : "Save goals"}</button>
       </form>
     </Modal>
   );

@@ -13,6 +13,7 @@ import {
 } from "../shared/schemas.js";
 import { createDatabase, type HealthDatabase } from "./db/database.js";
 import {
+  clearAllData,
   createFood,
   createMeal,
   deleteFood,
@@ -24,6 +25,7 @@ import {
   listMeals,
   listWeights,
   logQuickFood,
+  seedSampleData,
   setFoodArchived,
   updateFood,
   updateMeal,
@@ -63,6 +65,12 @@ export async function buildApp(options: AppOptions = {}) {
   app.get("/api/health", async () => ({ ok: true, openAiConfigured: Boolean(aiService) }));
   app.get("/api/settings", async () => getSettings(db));
   app.patch("/api/settings", async (request) => updateSettings(db, settingsSchema.parse(request.body)));
+  app.delete("/api/data", async () => clearAllData(db));
+  app.post("/api/data/seed", async (request, reply) => {
+    const body = z.object({ today: rangeSchema.shape.start }).parse(request.body);
+    const result = seedSampleData(db, body.today);
+    return result ?? reply.status(409).send({ error: "Your tracker already contains data. Clear it before adding the sample week." });
+  });
 
   app.get("/api/weights", async (request) => {
     const query = z.object({ start: z.string().optional(), end: z.string().optional() }).parse(request.query);
